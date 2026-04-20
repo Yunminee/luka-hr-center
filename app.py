@@ -45,39 +45,46 @@ def get_expert_prompt(user_query):
     질의: {user_query}
     """
 
-# 4. 질문 처리 및 팩트체크 로직
+# 4. 질문 처리 및 3단 스위칭 로직
 if prompt := st.chat_input("노무 이슈를 입력하세요."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("전문 법리 분석 중..."):
+        with st.spinner("최적의 엔진을 찾는 중..."):
             full_instruction = get_expert_prompt(prompt)
             result_text = ""
             active_engine = ""
 
+            # [1단계] 가장 최신인 3.1 Pro Preview 시도
             try:
-                # [시도 1] 최강의 추론 엔진 3.1 Pro
                 target_model = genai.GenerativeModel('gemini-3.1-pro-preview')
                 response = target_model.generate_content(full_instruction)
                 result_text = response.text
-                active_engine = "Gemini 3.1 Pro"
-
+                active_engine = "Gemini 3.1 Pro Preview (최신)"
+            
             except Exception as e:
-                # [시도 2] 한도 초과 시 Flash-Lite 투입
-                if "429" in str(e):
+                # [2단계] 3.1이 안되면 사진에서 확인한 '2.5 Pro' 투입!
+                try:
+                    target_model = genai.GenerativeModel('gemini-2.5-pro')
+                    response = target_model.generate_content(full_instruction)
+                    result_text = response.text
+                    active_engine = "Gemini 2.5 Pro (주력)"
+                
+                except Exception as e2:
+                    # [3단계] 2.5마저 바쁘면 가장 빠른 3.1 Flash-Lite로 해결
                     try:
-                        lite_model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
-                        response = lite_model.generate_content(full_instruction)
+                        target_model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
+                        response = target_model.generate_content(full_instruction)
                         result_text = response.text
                         active_engine = "Gemini 3.1 Flash-Lite (백업)"
-                    except Exception as e2:
-                        result_text = f"🚨 모든 엔진 응답 불가: {e2}"
-                else:
-                    result_text = f"🚨 시스템 오류: {e}"
+                    except Exception as e3:
+                        result_text = "🚨 모든 엔진이 현재 응답할 수 없는 상태입니다."
 
-            # 최종 답변 출력
+            # 결과 출력
+            if active_engine:
+                st.caption(f"✅ {active_engine} 엔진이 분석을 완료했습니다.")
             st.markdown(result_text)
             st.session_state.messages.append({"role": "assistant", "content": result_text})
             
