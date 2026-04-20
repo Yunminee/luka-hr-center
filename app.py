@@ -3,7 +3,8 @@ import google.generativeai as genai
 import re
 
 # 1. API 설정
-GOOGLE_API_KEY = st.secrets["AIzaSyBorlLWiImuN0B1J3-uCS7Zbqg5HrIbWzo"]
+# 수정 후의 코드 (이대로 복사해서 붙여넣으세요)
+GOOGLE_API_KEY = st.secrets["GEMINI_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
 
 # 2. UI 및 세션 설정
