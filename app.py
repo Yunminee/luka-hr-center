@@ -7,7 +7,7 @@ genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 # 2. UI 및 세션 설정
 st.set_page_config(page_title="루카 리서치 센터", layout="wide")
-st.title("⚖️ 루카의 실시간 법률 리서치 센터")
+st.title("⚖️ 루카의 노동법률 리서치 센터")
 
 with st.sidebar:
     st.header("🔍 실시간 팩트체크")
